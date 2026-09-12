@@ -1605,6 +1605,7 @@ if(HAVE_SUBSONIC)
     src/subsonic/subsonicurlhandler.cpp
     src/subsonic/subsonicbaserequest.cpp
     src/subsonic/subsonicrequest.cpp
+    src/subsonic/subsonicplaylistrequest.cpp
     src/subsonic/subsonicscrobblerequest.cpp
     src/settings/subsonicsettingspage.cpp
     src/scrobbler/subsonicscrobbler.cpp
@@ -1614,6 +1615,7 @@ if(HAVE_SUBSONIC)
     src/subsonic/subsonicurlhandler.h
     src/subsonic/subsonicbaserequest.h
     src/subsonic/subsonicrequest.h
+    src/subsonic/subsonicplaylistrequest.h
     src/subsonic/subsonicscrobblerequest.h
     src/settings/subsonicsettingspage.h
     src/scrobbler/subsonicscrobbler.h

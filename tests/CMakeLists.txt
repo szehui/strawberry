@@ -131,6 +131,21 @@ add_test_file(src/scrobblercache_test.cpp false)
 if(HAVE_MOODBAR)
   add_test_file(src/moodbarbuilder_test.cpp false)
   add_test_file(src/moodbarpipeline_test.cpp false)
+if(HAVE_SUBSONIC)
+  # SubsonicPlaylistRequest JSON parsing tests; compile the request source directly to avoid pulling in the whole service.
+  add_executable(subsonicplaylistrequest_test EXCLUDE_FROM_ALL src/subsonicplaylistrequest_test.cpp ${CMAKE_SOURCE_DIR}/src/subsonic/subsonicplaylistrequest.cpp)
+  target_include_directories(subsonicplaylistrequest_test PRIVATE ${CMAKE_BINARY_DIR}/src ${CMAKE_SOURCE_DIR}/src)
+  target_compile_definitions(subsonicplaylistrequest_test PRIVATE HAVE_SUBSONIC)
+  target_link_libraries(subsonicplaylistrequest_test PRIVATE
+    ${CMAKE_THREAD_LIBS_INIT}
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Test
+    test_utils
+    test_main
+  )
+  add_dependencies(build_tests subsonicplaylistrequest_test)
+  add_test(NAME subsonicplaylistrequest_test COMMAND ${CMAKE_CURRENT_BINARY_DIR}/subsonicplaylistrequest_test${CMAKE_EXECUTABLE_SUFFIX})
 endif()
 if(HAVE_WAVEFORM)
   add_test_file(src/waveformbuilder_test.cpp false)

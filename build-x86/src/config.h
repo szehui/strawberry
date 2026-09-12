@@ -1,0 +1,56 @@
+#ifndef CONFIG_H_IN
+#define CONFIG_H_IN
+
+#define CMAKE_BUILD_TYPE "Release"
+#define CMAKE_INSTALL_PREFIX "/usr/local"
+#define CMAKE_EXECUTABLE_SUFFIX ""
+
+#define USE_INSTALL_PREFIX
+
+/* #undef HAVE_WINPTHREADS */
+
+#define HAVE_BACKTRACE
+#define HAVE_ALSA
+#define HAVE_PULSE
+#define HAVE_GIO
+#define HAVE_GIO_UNIX
+#define HAVE_DBUS
+#define HAVE_MPRIS2
+#define HAVE_UDISKS2
+#define HAVE_AUDIOCD
+#define HAVE_MTP
+#define HAVE_GPOD
+/* #undef HAVE_SPARKLE */
+/* #undef HAVE_QTSPARKLE */
+#define HAVE_CHROMAPRINT
+#define HAVE_SONGTRACKING
+#define HAVE_TAGFETCHER
+#define HAVE_MOODBAR
+#define HAVE_GSTFASTSPECTRUM
+#define HAVE_WAVEFORM
+#define HAVE_EBUR128
+#define HAVE_GLOBALSHORTCUTS
+#define HAVE_X11_GLOBALSHORTCUTS
+#define HAVE_KGLOBALACCEL_GLOBALSHORTCUTS
+#define HAVE_STREAMTAGREADER
+#define HAVE_SUBSONIC
+#define HAVE_TIDAL
+#define HAVE_SPOTIFY
+#define HAVE_QOBUZ
+#define HAVE_DISCORD_RPC
+
+/* #undef HAVE_TAGLIB_DSFFILE */
+/* #undef HAVE_TAGLIB_DSDIFFFILE */
+
+/* #undef USE_BUNDLE */
+
+#define HAVE_TRANSLATIONS
+/* #undef INSTALL_TRANSLATIONS */
+#define TRANSLATIONS_DIR "/usr/local/share/strawberry/translations"
+
+#define HAVE_QPA_QPLATFORMNATIVEINTERFACE
+#define HAVE_QX11APPLICATION
+
+/* #undef ENABLE_WIN32_CONSOLE */
+
+#endif // CONFIG_H_IN

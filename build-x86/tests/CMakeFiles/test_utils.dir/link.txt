@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtest_utils.a CMakeFiles/test_utils.dir/src/mock_networkaccessmanager.cpp.o CMakeFiles/test_utils.dir/src/mock_playlistitem.cpp.o CMakeFiles/test_utils.dir/src/test_utils.cpp.o CMakeFiles/test_utils.dir/src/moc_mock_networkaccessmanager.cpp.o CMakeFiles/test_utils.dir/src/moc_test_utils.cpp.o
+/usr/bin/ranlib libtest_utils.a
