@@ -132,11 +132,11 @@ if(HAVE_MOODBAR)
   add_test_file(src/moodbarbuilder_test.cpp false)
   add_test_file(src/moodbarpipeline_test.cpp false)
 if(HAVE_SUBSONIC)
-  # SubsonicPlaylistRequest JSON parsing tests; compile the request source directly to avoid pulling in the whole service.
-  add_executable(subsonicplaylistrequest_test EXCLUDE_FROM_ALL src/subsonicplaylistrequest_test.cpp ${CMAKE_SOURCE_DIR}/src/subsonic/subsonicplaylistrequest.cpp)
+  # SubsonicPlaylistRequest JSON parsing tests
+  add_executable(subsonicplaylistrequest_test EXCLUDE_FROM_ALL src/subsonicplaylistrequest_test.cpp)
   target_include_directories(subsonicplaylistrequest_test PRIVATE ${CMAKE_BINARY_DIR}/src ${CMAKE_SOURCE_DIR}/src)
-  target_compile_definitions(subsonicplaylistrequest_test PRIVATE HAVE_SUBSONIC)
   target_link_libraries(subsonicplaylistrequest_test PRIVATE
+    strawberry_lib
     ${CMAKE_THREAD_LIBS_INIT}
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::Network

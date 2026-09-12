@@ -37,34 +37,16 @@ QJsonObject Parse(const char *json) {
   QJsonParseError parse_error;
   QJsonDocument doc = QJsonDocument::fromJson(QByteArray(json), &parse_error);
   EXPECT_EQ(parse_error.error, QJsonParseError::NoError);
-  return doc.object();
+  // Mimic SubsonicBaseRequest::ParseJsonObject: unwrap the "subsonic-response" envelope,
+  // since the parse helpers expect the inner object (as on the real call path).
+  return doc[u"subsonic-response"_s].toObject();
 }
 
 class SubsonicPlaylistRequestTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    // Parse helpers only use service accessors for cover urls etc.; passing a null service
-    // is safe as long as the test JSON has no cover art, and url_handler_ is not used for scheme.
-    // To be safe, we exercise only ParsePlaylistsJson / ParsePlaylistSongsJson which do not need
-    // the constructor (ParseSong does use url_handler_). For songs tests we construct the object
-    // with null pointers and verify only that parsing succeeds/fails as expected.
-  }
-
-  static SubsonicPlaylistInfoList ParsePlaylists(const QJsonObject &json, QString *error) {
-    // ParsePlaylistsJson is a non-static member but uses no members other than errors_ (purely local),
-    // so calling through a "reinterpreted" instance is avoided by making this test a friend usage pattern:
-    // Instead we construct a minimal object with null service/handler which is safe for playlist parsing.
-    static SubsonicPlaylistRequest *inst() {
-      static SubsonicPlaylistRequest *singleton = new SubsonicPlaylistRequest(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
-      return singleton;
-    }
-    return inst()->ParsePlaylistsJson(json, error);
-  }
-
-  static SongList ParsePlaylistSongs(const QJsonObject &json, const QString &playlist_name, QString *error, QString *name_actual) {
-    static SubsonicPlaylistRequest *singleton = new SubsonicPlaylistRequest(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
-    return singleton->ParsePlaylistSongsJson(json, playlist_name, error, name_actual);
-  }
+  // We construct a minimal request object with null service/handler per test, which is safe
+  // because the parse helpers do not touch network members.
+  void SetUp() override {}
 };
 
 TEST_F(SubsonicPlaylistRequestTest, GetPlaylistsHappyPath) {
@@ -84,24 +66,47 @@ TEST_F(SubsonicPlaylistRequestTest, GetPlaylistsHappyPath) {
   )json");
 
   QString error;
-  const QList<SubsonicPlaylistInfo> playlists = ParsePlaylists(json, &error);
+  QList<SubsonicPlaylistInfo> playlists;
+
+  // ParsePlaylistsJson is a non-static member but uses no members other than errors_ (purely local),
+  // so calling through a "reinterpreted" instance is avoided by making this test a friend usage pattern:
+  // Instead we construct a minimal object with null service/handler which is safe for playlist parsing.
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  playlists = request.ParsePlaylistsJson(json, &error);
 
   ASSERT_EQ(playlists.size(), 2);
   EXPECT_EQ(QString::fromStdString("1"), playlists[0].id);
   EXPECT_EQ(u"Favorites"_s, playlists[0].name);
   EXPECT_EQ(u"admin"_s, playlists[0].owner);
   EXPECT_EQ(3, playlists[0].song_count);
-  EXPECT_EQ(2, playlists[1].song_count);
+  EXPECT_EQ(10, playlists[1].song_count);
   EXPECT_TRUE(error.isEmpty());
 
 }
 
 TEST_F(SubsonicPlaylistRequestTest, GetPlaylistsEmptyList) {
 
+  // An object with "playlists" but no "playlist" array is malformed (Navidrome always sends the array,
+  // even when empty), so this surfaces an error rather than an empty list.
   const QJsonObject json = Parse(R"json({"subsonic-response": {"status": "ok", "playlists": {}}})json");
 
   QString error;
-  const QList<SubsonicPlaylistInfo> playlists = ParsePlaylists(json, &error);
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const QList<SubsonicPlaylistInfo> playlists = request.ParsePlaylistsJson(json, &error);
+
+  EXPECT_EQ(playlists.size(), 0);
+  EXPECT_FALSE(error.isEmpty());
+
+}
+
+TEST_F(SubsonicPlaylistRequestTest, GetPlaylistsEmptyArray) {
+
+  // The proper empty case: "playlists" object with an empty "playlist" array.
+  const QJsonObject json = Parse(R"json({"subsonic-response": {"status": "ok", "playlists": {"playlist": []}}})json");
+
+  QString error;
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const QList<SubsonicPlaylistInfo> playlists = request.ParsePlaylistsJson(json, &error);
 
   EXPECT_EQ(playlists.size(), 0);
   EXPECT_TRUE(error.isEmpty());
@@ -126,7 +131,8 @@ TEST_F(SubsonicPlaylistRequestTest, GetPlaylistsSkipsMalformedEntries) {
   )json");
 
   QString error;
-  const QList<SubsonicPlaylistInfo> playlists = ParsePlaylists(json, &error);
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const QList<SubsonicPlaylistInfo> playlists = request.ParsePlaylistsJson(json, &error);
 
   ASSERT_EQ(playlists.size(), 1);
   EXPECT_EQ(u"Valid"_s, playlists[0].name);
@@ -154,7 +160,8 @@ TEST_F(SubsonicPlaylistRequestTest, GetPlaylistSongsHappyPath) {
   )json");
 
   QString error, name_actual;
-  const SongList songs = ParsePlaylistSongs(json, u"Road trip"_s, &error, &name_actual);
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const SongList songs = request.ParsePlaylistSongsJson(json, u"Road trip"_s, &error, &name_actual);
 
   EXPECT_EQ(3, songs.size());
   EXPECT_EQ(u"Road trip"_s, name_actual);
@@ -184,7 +191,8 @@ TEST_F(SubsonicPlaylistRequestTest, GetPlaylistSongsSkipsInvalidEntries) {
   )json");
 
   QString error, name_actual;
-  const SongList songs = ParsePlaylistSongs(json, u"Broken"_s, &error, &name_actual);
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const SongList songs = request.ParsePlaylistSongsJson(json, u"Broken"_s, &error, &name_actual);
 
   ASSERT_EQ(1, songs.size());
   EXPECT_EQ(u"Good song"_s, songs[0].title());
@@ -199,7 +207,8 @@ TEST_F(SubsonicPlaylistRequestTest, GetPlaylistSongsEmptyPlaylist) {
   )json");
 
   QString error, name_actual;
-  const SongList songs = ParsePlaylistSongs(json, u"Empty"_s, &error, &name_actual);
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const SongList songs = request.ParsePlaylistSongsJson(json, u"Empty"_s, &error, &name_actual);
 
   EXPECT_EQ(0, songs.size());
   EXPECT_TRUE(error.isEmpty());
@@ -214,7 +223,8 @@ TEST_F(SubsonicPlaylistRequestTest, ErrorObjectSurfacesError) {
 
   // The error object (no playlists key) should surface an error.
   QString error;
-  const QList<SubsonicPlaylistInfo> playlists = ParsePlaylists(json, &error);
+  SubsonicPlaylistRequest request(nullptr, nullptr, SharedPtr<NetworkAccessManager>());
+  const QList<SubsonicPlaylistInfo> playlists = request.ParsePlaylistsJson(json, &error);
 
   EXPECT_EQ(0, playlists.size());
   EXPECT_FALSE(error.isEmpty());

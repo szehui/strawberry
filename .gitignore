@@ -15,3 +15,9 @@
 /src/apicredentials.h
 /debian/changelog
 _codeql_detected_source_root
+
+# Local build directories
+build-x86/
+build/
+.hermes/
+*.deb
