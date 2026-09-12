@@ -197,6 +197,7 @@ void SubsonicPlaylistRequest::GetPlaylistSongs(const QString &playlist_id, const
 
 void SubsonicPlaylistRequest::PlaylistSongsReplyReceived(QNetworkReply *reply, const QString &playlist_id, const QString &playlist_name) {
 
+  Q_UNUSED(playlist_id);
   if (!replies_.contains(reply)) return;
   replies_.removeAll(reply);
   QObject::disconnect(reply, nullptr, this, nullptr);
@@ -373,7 +374,9 @@ void SubsonicPlaylistRequest::ParseSong(Song &song, const QJsonObject &json_obje
   }
 
   QUrl url;
-  url.setScheme(url_handler_->scheme());
+  if (url_handler_) {
+    url.setScheme(url_handler_->scheme());
+  }
   url.setPath(song_id);
 
   QUrl cover_url;
