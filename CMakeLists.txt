@@ -266,7 +266,10 @@ if(X11_FOUND)
   unset(CMAKE_REQUIRED_LIBRARIES)
 endif()
 
-find_package(KDSingleApplication-qt${QT_VERSION_MAJOR} 1.1.0 REQUIRED)
+find_package(KDSingleApplication-qt${QT_VERSION_MAJOR} 1.0.0 QUIET)
+if(NOT KDSingleApplication-qt${QT_VERSION_MAJOR}_FOUND)
+  find_package(KDSingleApplication-qt${QT_VERSION_MAJOR} 1.1.0 REQUIRED)
+endif()
 
 if(APPLE)
   find_library(SPARKLE Sparkle)
@@ -1458,6 +1461,7 @@ optional_source(HAVE_SUBSONIC
     src/subsonic/subsonicurlhandler.cpp
     src/subsonic/subsonicbaserequest.cpp
     src/subsonic/subsonicrequest.cpp
+    src/subsonic/subsonicplaylistrequest.cpp
     src/subsonic/subsonicscrobblerequest.cpp
     src/settings/subsonicsettingspage.cpp
     src/scrobbler/subsonicscrobbler.cpp
@@ -1466,6 +1470,7 @@ optional_source(HAVE_SUBSONIC
     src/subsonic/subsonicurlhandler.h
     src/subsonic/subsonicbaserequest.h
     src/subsonic/subsonicrequest.h
+    src/subsonic/subsonicplaylistrequest.h
     src/subsonic/subsonicscrobblerequest.h
     src/settings/subsonicsettingspage.h
     src/scrobbler/subsonicscrobbler.h

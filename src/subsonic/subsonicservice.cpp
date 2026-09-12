@@ -53,6 +53,8 @@
 #include "subsonicservice.h"
 #include "subsonicurlhandler.h"
 #include "subsonicrequest.h"
+#include "subsonicplaylistrequest.h"
+#include "subsonicplaylistinfo.h"
 #include "subsonicscrobblerequest.h"
 #include "constants/subsonicsettings.h"
 
@@ -424,6 +426,62 @@ void SubsonicService::GetSongs() {
   QObject::connect(&*songs_request_, &SubsonicRequest::UpdateProgress, this, &SubsonicService::SongsUpdateProgress);
 
   songs_request_->GetAlbums();
+
+}
+
+void SubsonicService::ResetPlaylistRequest() {
+
+  if (playlist_request_) {
+    QObject::disconnect(&*playlist_request_, nullptr, this, nullptr);
+    QObject::disconnect(this, nullptr, &*playlist_request_, nullptr);
+    playlist_request_.reset();
+  }
+
+}
+
+void SubsonicService::GetPlaylists() {
+
+  if (!server_url().isValid()) {
+    Q_EMIT PlaylistsReceived(SubsonicPlaylistInfoList(), tr("Server URL is invalid."));
+    return;
+  }
+
+  if (username().isEmpty() || password().isEmpty()) {
+    Q_EMIT PlaylistsReceived(SubsonicPlaylistInfoList(), tr("Missing username or password."));
+    return;
+  }
+
+  ResetPlaylistRequest();
+  playlist_request_.reset(new SubsonicPlaylistRequest(this, url_handler_, network_), [](SubsonicPlaylistRequest *request) { request->deleteLater(); });
+  QObject::connect(&*playlist_request_, &SubsonicPlaylistRequest::PlaylistsReceived, this, [this](const SubsonicPlaylistInfoList &playlists, const QString &error) {
+    Q_EMIT PlaylistsReceived(playlists, error);
+    ResetPlaylistRequest();
+  });
+
+  playlist_request_->GetPlaylists();
+
+}
+
+void SubsonicService::GetPlaylistSongs(const QString &playlist_id, const QString &playlist_name) {
+
+  if (!server_url().isValid()) {
+    Q_EMIT PlaylistSongsReceived(SongList(), playlist_name, tr("Server URL is invalid."));
+    return;
+  }
+
+  if (username().isEmpty() || password().isEmpty()) {
+    Q_EMIT PlaylistSongsReceived(SongList(), playlist_name, tr("Missing username or password."));
+    return;
+  }
+
+  ResetPlaylistRequest();
+  playlist_request_.reset(new SubsonicPlaylistRequest(this, url_handler_, network_), [](SubsonicPlaylistRequest *request) { request->deleteLater(); });
+  QObject::connect(&*playlist_request_, &SubsonicPlaylistRequest::SongsReceived, this, [this](const SongList &songs, const QString &playlist, const QString &error) {
+    Q_EMIT PlaylistSongsReceived(songs, playlist, error);
+    ResetPlaylistRequest();
+  });
+
+  playlist_request_->GetPlaylistSongs(playlist_id, playlist_name);
 
 }
 

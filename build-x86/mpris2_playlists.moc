@@ -1,0 +1,272 @@
+/****************************************************************************
+** Meta object code from reading C++ file 'mpris2_playlists.h'
+**
+** Created by: The Qt Meta Object Compiler version 68 (Qt 6.4.2)
+**
+** WARNING! All changes made in this file will be lost!
+*****************************************************************************/
+
+#include <memory>
+#include "mpris2_playlists.h"
+#include <QtCore/qmetatype.h>
+#if !defined(Q_MOC_OUTPUT_REVISION)
+#error "The header file 'mpris2_playlists.h' doesn't include <QObject>."
+#elif Q_MOC_OUTPUT_REVISION != 68
+#error "This file was generated using the moc from 6.4.2. It"
+#error "cannot be used with the include files from this version of Qt."
+#error "(The moc has changed too much.)"
+#endif
+
+#ifndef Q_CONSTINIT
+#define Q_CONSTINIT
+#endif
+
+QT_BEGIN_MOC_NAMESPACE
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
+namespace {
+struct qt_meta_stringdata_Mpris2Playlists_t {
+    uint offsetsAndSizes[44];
+    char stringdata0[16];
+    char stringdata1[16];
+    char stringdata2[33];
+    char stringdata3[20];
+    char stringdata4[1137];
+    char stringdata5[16];
+    char stringdata6[1];
+    char stringdata7[14];
+    char stringdata8[9];
+    char stringdata9[17];
+    char stringdata10[16];
+    char stringdata11[11];
+    char stringdata12[13];
+    char stringdata13[18];
+    char stringdata14[6];
+    char stringdata15[9];
+    char stringdata16[6];
+    char stringdata17[13];
+    char stringdata18[15];
+    char stringdata19[14];
+    char stringdata20[10];
+    char stringdata21[14];
+};
+#define QT_MOC_LITERAL(ofs, len) \
+    uint(sizeof(qt_meta_stringdata_Mpris2Playlists_t::offsetsAndSizes) + ofs), len 
+Q_CONSTINIT static const qt_meta_stringdata_Mpris2Playlists_t qt_meta_stringdata_Mpris2Playlists = {
+    {
+        QT_MOC_LITERAL(0, 15),  // "Mpris2Playlists"
+        QT_MOC_LITERAL(16, 15),  // "D-Bus Interface"
+        QT_MOC_LITERAL(32, 32),  // "org.mpris.MediaPlayer2.Playlists"
+        QT_MOC_LITERAL(65, 19),  // "D-Bus Introspection"
+        QT_MOC_LITERAL(85, 1136),  // "  <interface name=\"org.mpris..."
+        QT_MOC_LITERAL(1222, 15),  // "PlaylistChanged"
+        QT_MOC_LITERAL(1238, 0),  // ""
+        QT_MOC_LITERAL(1239, 13),  // "MprisPlaylist"
+        QT_MOC_LITERAL(1253, 8),  // "Playlist"
+        QT_MOC_LITERAL(1262, 16),  // "ActivatePlaylist"
+        QT_MOC_LITERAL(1279, 15),  // "QDBusObjectPath"
+        QT_MOC_LITERAL(1295, 10),  // "PlaylistId"
+        QT_MOC_LITERAL(1306, 12),  // "GetPlaylists"
+        QT_MOC_LITERAL(1319, 17),  // "MprisPlaylistList"
+        QT_MOC_LITERAL(1337, 5),  // "Index"
+        QT_MOC_LITERAL(1343, 8),  // "MaxCount"
+        QT_MOC_LITERAL(1352, 5),  // "Order"
+        QT_MOC_LITERAL(1358, 12),  // "ReverseOrder"
+        QT_MOC_LITERAL(1371, 14),  // "ActivePlaylist"
+        QT_MOC_LITERAL(1386, 13),  // "MaybePlaylist"
+        QT_MOC_LITERAL(1400, 9),  // "Orderings"
+        QT_MOC_LITERAL(1410, 13)   // "PlaylistCount"
+    },
+    "Mpris2Playlists",
+    "D-Bus Interface",
+    "org.mpris.MediaPlayer2.Playlists",
+    "D-Bus Introspection",
+    "  <interface name=\"org.mpris.MediaPlayer2.Playlists\">\n    <property"
+    " access=\"read\" type=\"u\" name=\"PlaylistCount\"/>\n    <property ac"
+    "cess=\"read\" type=\"as\" name=\"Orderings\"/>\n    <property access=\""
+    "read\" type=\"(b(oss))\" name=\"ActivePlaylist\">\n      <annotation v"
+    "alue=\"MaybePlaylist\" name=\"org.qtproject.QtDBus.QtTypeName\"/>\n   "
+    " </property>\n    <method name=\"ActivatePlaylist\">\n      <arg direc"
+    "tion=\"in\" type=\"o\" name=\"PlaylistId\"/>\n    </method>\n    <meth"
+    "od name=\"GetPlaylists\">\n      <arg direction=\"in\" type=\"u\" name"
+    "=\"Index\"/>\n      <arg direction=\"in\" type=\"u\" name=\"MaxCount\""
+    "/>\n      <arg direction=\"in\" type=\"s\" name=\"Order\"/>\n      <ar"
+    "g direction=\"in\" type=\"b\" name=\"ReverseOrder\"/>\n      <arg dire"
+    "ction=\"out\" type=\"a(oss)\" name=\"Playlists\"/>\n      <annotation "
+    "value=\"MprisPlaylistList\" name=\"org.qtproject.QtDBus.QtTypeName.Out"
+    "0\"/>\n    </method>\n    <signal name=\"PlaylistChanged\">\n      <ar"
+    "g direction=\"out\" type=\"(oss)\" name=\"Playlist\"/>\n      <annotat"
+    "ion value=\"MprisPlaylist\" name=\"org.qtproject.QtDBus.QtTypeName.Out"
+    "0\"/>\n    </signal>\n    <annotation value=\"MaybePlaylist\" name=\"o"
+    "rg.qtproject.QtDBus.QtTypeName\"/>\n  </interface>\n",
+    "PlaylistChanged",
+    "",
+    "MprisPlaylist",
+    "Playlist",
+    "ActivatePlaylist",
+    "QDBusObjectPath",
+    "PlaylistId",
+    "GetPlaylists",
+    "MprisPlaylistList",
+    "Index",
+    "MaxCount",
+    "Order",
+    "ReverseOrder",
+    "ActivePlaylist",
+    "MaybePlaylist",
+    "Orderings",
+    "PlaylistCount"
+};
+#undef QT_MOC_LITERAL
+} // unnamed namespace
+
+Q_CONSTINIT static const uint qt_meta_data_Mpris2Playlists[] = {
+
+ // content:
+      10,       // revision
+       0,       // classname
+       2,   14, // classinfo
+       3,   18, // methods
+       3,   51, // properties
+       0,    0, // enums/sets
+       0,    0, // constructors
+       0,       // flags
+       1,       // signalCount
+
+ // classinfo: key, value
+       1,    2,
+       3,    4,
+
+ // signals: name, argc, parameters, tag, flags, initial metatype offsets
+       5,    1,   36,    6, 0x06,    4 /* Public */,
+
+ // slots: name, argc, parameters, tag, flags, initial metatype offsets
+       9,    1,   39,    6, 0x0a,    6 /* Public */,
+      12,    4,   42,    6, 0x0a,    8 /* Public */,
+
+ // signals: parameters
+    QMetaType::Void, 0x80000000 | 7,    8,
+
+ // slots: parameters
+    QMetaType::Void, 0x80000000 | 10,   11,
+    0x80000000 | 13, QMetaType::UInt, QMetaType::UInt, QMetaType::QString, QMetaType::Bool,   14,   15,   16,   17,
+
+ // properties: name, type, flags
+      18, 0x80000000 | 19, 0x00015009, uint(-1), 0,
+      20, QMetaType::QStringList, 0x00015001, uint(-1), 0,
+      21, QMetaType::UInt, 0x00015001, uint(-1), 0,
+
+       0        // eod
+};
+
+Q_CONSTINIT const QMetaObject Mpris2Playlists::staticMetaObject = { {
+    QMetaObject::SuperData::link<QDBusAbstractAdaptor::staticMetaObject>(),
+    qt_meta_stringdata_Mpris2Playlists.offsetsAndSizes,
+    qt_meta_data_Mpris2Playlists,
+    qt_static_metacall,
+    nullptr,
+    qt_incomplete_metaTypeArray<qt_meta_stringdata_Mpris2Playlists_t,
+        // property 'ActivePlaylist'
+        QtPrivate::TypeAndForceComplete<MaybePlaylist, std::true_type>,
+        // property 'Orderings'
+        QtPrivate::TypeAndForceComplete<QStringList, std::true_type>,
+        // property 'PlaylistCount'
+        QtPrivate::TypeAndForceComplete<uint, std::true_type>,
+        // Q_OBJECT / Q_GADGET
+        QtPrivate::TypeAndForceComplete<Mpris2Playlists, std::true_type>,
+        // method 'PlaylistChanged'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<MprisPlaylist, std::false_type>,
+        // method 'ActivatePlaylist'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QDBusObjectPath &, std::false_type>,
+        // method 'GetPlaylists'
+        QtPrivate::TypeAndForceComplete<MprisPlaylistList, std::false_type>,
+        QtPrivate::TypeAndForceComplete<uint, std::false_type>,
+        QtPrivate::TypeAndForceComplete<uint, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        QtPrivate::TypeAndForceComplete<bool, std::false_type>
+    >,
+    nullptr
+} };
+
+void Mpris2Playlists::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        auto *_t = static_cast<Mpris2Playlists *>(_o);
+        (void)_t;
+        switch (_id) {
+        case 0: _t->PlaylistChanged((*reinterpret_cast< std::add_pointer_t<MprisPlaylist>>(_a[1]))); break;
+        case 1: _t->ActivatePlaylist((*reinterpret_cast< std::add_pointer_t<QDBusObjectPath>>(_a[1]))); break;
+        case 2: { MprisPlaylistList _r = _t->GetPlaylists((*reinterpret_cast< std::add_pointer_t<uint>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<uint>>(_a[2])),(*reinterpret_cast< std::add_pointer_t<QString>>(_a[3])),(*reinterpret_cast< std::add_pointer_t<bool>>(_a[4])));
+            if (_a[0]) *reinterpret_cast< MprisPlaylistList*>(_a[0]) = std::move(_r); }  break;
+        default: ;
+        }
+    } else if (_c == QMetaObject::IndexOfMethod) {
+        int *result = reinterpret_cast<int *>(_a[0]);
+        {
+            using _t = void (Mpris2Playlists::*)(MprisPlaylist );
+            if (_t _q_method = &Mpris2Playlists::PlaylistChanged; *reinterpret_cast<_t *>(_a[1]) == _q_method) {
+                *result = 0;
+                return;
+            }
+        }
+    }else if (_c == QMetaObject::ReadProperty) {
+        auto *_t = static_cast<Mpris2Playlists *>(_o);
+        (void)_t;
+        void *_v = _a[0];
+        switch (_id) {
+        case 0: *reinterpret_cast< MaybePlaylist*>(_v) = _t->activePlaylist(); break;
+        case 1: *reinterpret_cast< QStringList*>(_v) = _t->orderings(); break;
+        case 2: *reinterpret_cast< uint*>(_v) = _t->playlistCount(); break;
+        default: break;
+        }
+    } else if (_c == QMetaObject::WriteProperty) {
+    } else if (_c == QMetaObject::ResetProperty) {
+    } else if (_c == QMetaObject::BindableProperty) {
+    }
+}
+
+const QMetaObject *Mpris2Playlists::metaObject() const
+{
+    return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
+}
+
+void *Mpris2Playlists::qt_metacast(const char *_clname)
+{
+    if (!_clname) return nullptr;
+    if (!strcmp(_clname, qt_meta_stringdata_Mpris2Playlists.stringdata0))
+        return static_cast<void*>(this);
+    return QDBusAbstractAdaptor::qt_metacast(_clname);
+}
+
+int Mpris2Playlists::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
+{
+    _id = QDBusAbstractAdaptor::qt_metacall(_c, _id, _a);
+    if (_id < 0)
+        return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        if (_id < 3)
+            qt_static_metacall(this, _c, _id, _a);
+        _id -= 3;
+    } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
+        if (_id < 3)
+            *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
+        _id -= 3;
+    }else if (_c == QMetaObject::ReadProperty || _c == QMetaObject::WriteProperty
+            || _c == QMetaObject::ResetProperty || _c == QMetaObject::BindableProperty
+            || _c == QMetaObject::RegisterPropertyMetaType) {
+        qt_static_metacall(this, _c, _id, _a);
+        _id -= 3;
+    }
+    return _id;
+}
+
+// SIGNAL 0
+void Mpris2Playlists::PlaylistChanged(MprisPlaylist _t1)
+{
+    void *_a[] = { nullptr, const_cast<void*>(reinterpret_cast<const void*>(std::addressof(_t1))) };
+    QMetaObject::activate(this, &staticMetaObject, 0, _a);
+}
+QT_WARNING_POP
+QT_END_MOC_NAMESPACE

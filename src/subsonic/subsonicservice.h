@@ -38,6 +38,7 @@
 #include "includes/shared_ptr.h"
 #include "constants/subsonicsettings.h"
 #include "core/song.h"
+#include "subsonicplaylistinfo.h"
 #include "streaming/streamingservice.h"
 #include "collection/collectionmodel.h"
 
@@ -50,6 +51,7 @@ class UrlHandlers;
 class AlbumCoverLoader;
 class SubsonicUrlHandler;
 class SubsonicRequest;
+class SubsonicPlaylistRequest;
 class SubsonicScrobbleRequest;
 class CollectionBackend;
 class CollectionModel;
@@ -101,6 +103,13 @@ class SubsonicService : public StreamingService {
   void GetSongs() override;
   void DeleteSongs();
   void ResetSongsRequest() override;
+  void GetPlaylists();
+  void GetPlaylistSongs(const QString &playlist_id, const QString &playlist_name);
+  void ResetPlaylistRequest();
+
+ Q_SIGNALS:
+  void PlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error);
+  void PlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error);
 
  private Q_SLOTS:
   void HandlePingSSLErrors(const QList<QSslError> &ssl_errors);
@@ -117,6 +126,7 @@ class SubsonicService : public StreamingService {
   CollectionModel *collection_model_;
 
   SharedPtr<SubsonicRequest> songs_request_;
+  SharedPtr<SubsonicPlaylistRequest> playlist_request_;
   SharedPtr<SubsonicScrobbleRequest> scrobble_request_;
 
   QUrl server_url_;
