@@ -56,6 +56,9 @@
 #include "osd/osdbase.h"
 #include "playlist/playlist.h"
 #include "playlist/playlistitem.h"
+#ifdef HAVE_SUBSONIC
+#include "subsonic/subsonicplaylistinfo.h"
+#endif
 #include "settings/settingsdialog.h"
 #include "constants/behavioursettings.h"
 #include "covermanager/albumcoverloaderresult.h"
@@ -217,6 +220,12 @@ class MainWindow : public QMainWindow, public PlatformInterface {
 
   void OpenCollectionSettingsDialog();
   void OpenServiceSettingsDialog(const Song::Source source);
+
+#ifdef HAVE_SUBSONIC
+  void ImportSubsonicPlaylist();
+  void SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error);
+  void SubsonicPlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error);
+#endif
 
   void ReloadSettings();
   void ReloadAllSettings();

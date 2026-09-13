@@ -60,6 +60,7 @@
 #include <QActionGroup>
 #include <QShortcut>
 #include <QMessageBox>
+#include <QInputDialog>
 #include <QErrorMessage>
 #include <QColor>
 #include <QFrame>
@@ -172,6 +173,7 @@
 #include "constants/playlistsettings.h"
 #ifdef HAVE_SUBSONIC
 #  include "constants/subsonicsettings.h"
+#  include "subsonic/subsonicservice.h"
 #endif
 #ifdef HAVE_TIDAL
 #  include "tidal/tidalservice.h"
@@ -561,6 +563,9 @@ MainWindow::MainWindow(Application *app,
   ui_->action_remove_unavailable->setIcon(IconLoader::Load(u"list-remove"_s));
   ui_->action_remove_from_playlist->setIcon(IconLoader::Load(u"list-remove"_s));
   ui_->action_save_all_playlists->setIcon(IconLoader::Load(u"document-save-all"_s));
+#ifdef HAVE_SUBSONIC
+  ui_->action_import_subsonic_playlist->setIcon(IconLoader::Load(u"view-media-playlist"_s));
+#endif
 
   // Configure
 
@@ -814,6 +819,11 @@ MainWindow::MainWindow(Application *app,
 #ifdef HAVE_SUBSONIC
   QObject::connect(subsonic_view_, &StreamingSongsView::OpenSettingsDialog, this, &MainWindow::OpenServiceSettingsDialog);
   QObject::connect(subsonic_view_->view(), &StreamingCollectionView::AddToPlaylistSignal, this, &MainWindow::AddToPlaylist);
+  QObject::connect(ui_->action_import_subsonic_playlist, &QAction::triggered, this, &MainWindow::ImportSubsonicPlaylist);
+  if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+    QObject::connect(&*subsonicservice, &SubsonicService::PlaylistsReceived, this, &MainWindow::SubsonicPlaylistsReceived);
+    QObject::connect(&*subsonicservice, &SubsonicService::PlaylistSongsReceived, this, &MainWindow::SubsonicPlaylistSongsReceived);
+  }
 #endif
 
 #ifdef HAVE_TIDAL
@@ -3713,3 +3723,65 @@ void MainWindow::ProcessMetadataQueue() {
   }
 
 }
+
+#ifdef HAVE_SUBSONIC
+
+void MainWindow::ImportSubsonicPlaylist() {
+
+  if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+    subsonicservice->GetPlaylists();
+  }
+
+}
+
+void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error) {
+
+  if (!error.isEmpty()) {
+    QMessageBox::warning(this, tr("Error"), tr("Failed to get playlists from Subsonic server: %1").arg(error));
+    return;
+  }
+
+  if (playlists.isEmpty()) {
+    QMessageBox::information(this, tr("Import from Subsonic server"), tr("There are no playlists on the Subsonic server."));
+    return;
+  }
+
+  QStringList names;
+  for (const SubsonicPlaylistInfo &playlist : playlists) {
+    names << playlist.name;
+  }
+
+  bool ok = false;
+  const QString selected = QInputDialog::getItem(this, tr("Import from Subsonic server"), tr("Select a playlist to import:"), names, 0, false, &ok);
+  if (!ok || selected.isEmpty()) {
+    return;
+  }
+
+  for (const SubsonicPlaylistInfo &playlist : playlists) {
+    if (playlist.name == selected) {
+      if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+        subsonicservice->GetPlaylistSongs(playlist.id, playlist.name);
+      }
+      break;
+    }
+  }
+
+}
+
+void MainWindow::SubsonicPlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error) {
+
+  if (!error.isEmpty()) {
+    QMessageBox::warning(this, tr("Error"), tr("Failed to get playlist from Subsonic server: %1").arg(error));
+    return;
+  }
+
+  if (songs.isEmpty()) {
+    QMessageBox::information(this, tr("Import from Subsonic server"), tr("The playlist %1 is empty.").arg(playlist_name));
+    return;
+  }
+
+  app_->playlist_manager()->New(playlist_name, songs);
+
+}
+
+#endif  // HAVE_SUBSONIC
