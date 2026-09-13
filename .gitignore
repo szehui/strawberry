@@ -21,3 +21,4 @@ build-x86/
 build/
 .hermes/
 *.deb
+obj-x86_64-linux-gnu/
