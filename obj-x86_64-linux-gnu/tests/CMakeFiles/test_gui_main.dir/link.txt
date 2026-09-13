@@ -1,2 +1,0 @@
-/usr/bin/ar qc libtest_gui_main.a CMakeFiles/test_gui_main.dir/qrc_testdata.cpp.o CMakeFiles/test_gui_main.dir/qrc_data.cpp.o CMakeFiles/test_gui_main.dir/qrc_icons.cpp.o CMakeFiles/test_gui_main.dir/src/main.cpp.o
-/usr/bin/ranlib libtest_gui_main.a
