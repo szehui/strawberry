@@ -3770,6 +3770,8 @@ void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playl
 
 void MainWindow::SubsonicPlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error) {
 
+  qLog(Debug) << "MainWindow: playlist songs received" << songs.size() << playlist_name << error;
+
   if (!error.isEmpty()) {
     QMessageBox::warning(this, tr("Error"), tr("Failed to get playlist from Subsonic server: %1").arg(error));
     return;
