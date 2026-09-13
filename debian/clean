@@ -1,4 +1,0 @@
-dist/scripts/maketarball.sh
-CMakeCache.txt
-CMakeFiles/
-debian/test-home/

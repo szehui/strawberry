@@ -197,6 +197,8 @@ void SubsonicPlaylistRequest::GetPlaylistSongs(const QString &playlist_id, const
 
 void SubsonicPlaylistRequest::PlaylistSongsReplyReceived(QNetworkReply *reply, const QString &playlist_id, const QString &playlist_name) {
 
+  qLog(Debug) << "SubsonicPlaylistRequest: playlist songs reply received" << reply->error() << playlist_name;
+
   Q_UNUSED(playlist_id);
   if (!replies_.contains(reply)) return;
   replies_.removeAll(reply);
