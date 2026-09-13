@@ -464,6 +464,8 @@ void SubsonicService::GetPlaylists() {
 
 void SubsonicService::GetPlaylistSongs(const QString &playlist_id, const QString &playlist_name) {
 
+  qLog(Debug) << "SubsonicService::GetPlaylistSongs" << playlist_id << playlist_name;
+
   if (!server_url().isValid()) {
     Q_EMIT PlaylistSongsReceived(SongList(), playlist_name, tr("Server URL is invalid."));
     return;
