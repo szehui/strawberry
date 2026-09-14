@@ -3736,6 +3736,8 @@ void MainWindow::ImportSubsonicPlaylist() {
 
 void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error) {
 
+  qLog(Debug) << "MainWindow::SubsonicPlaylistsReceived" << playlists.size() << "error:" << error;
+
   if (!error.isEmpty()) {
     QMessageBox::warning(this, tr("Error"), tr("Failed to get playlists from Subsonic server: %1").arg(error));
     return;
@@ -3753,12 +3755,15 @@ void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playl
 
   bool ok = false;
   const QString selected = QInputDialog::getItem(this, tr("Import from Subsonic server"), tr("Select a playlist to import:"), names, 0, false, &ok);
+  qLog(Debug) << "User selected:" << selected << "ok:" << ok;
   if (!ok || selected.isEmpty()) {
     return;
   }
 
   for (const SubsonicPlaylistInfo &playlist : playlists) {
+    qLog(Debug) << "Comparing" << playlist.name << "==" << selected << "?" << (playlist.name == selected);
     if (playlist.name == selected) {
+      qLog(Debug) << "MATCH - calling GetPlaylistSongs for" << playlist.id << playlist.name;
       if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
         subsonicservice->GetPlaylistSongs(playlist.id, playlist.name);
       }
