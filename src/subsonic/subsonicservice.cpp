@@ -204,7 +204,7 @@ void SubsonicService::SendPingWithCredentials(QUrl url, const QString &username,
   QObject::connect(reply, &QNetworkReply::sslErrors, this, &SubsonicService::HandlePingSSLErrors);
   QObject::connect(reply, &QNetworkReply::finished, this, [this, reply, url, username, password, auth_method]() { HandlePingReply(reply, url, username, password, auth_method); });
 
-  // qLog(Debug) << "Subsonic: Sending request" << url << url.query();
+  // qLog(Info) << "Subsonic: Sending request" << url << url.query();
 
 }
 
@@ -247,7 +247,7 @@ void SubsonicService::HandlePingReply(QNetworkReply *reply, const QUrl &url, con
         QUrl redirect_url = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
         if (!redirect_url.isEmpty()) {
           ++ping_redirects_;
-          qLog(Debug) << "Redirecting ping request to" << redirect_url.toString(QUrl::RemoveQuery);
+          qLog(Info) << "Redirecting ping request to" << redirect_url.toString(QUrl::RemoveQuery);
           SendPingWithCredentials(redirect_url, username, password, auth_method, true);
           return;
         }
@@ -464,7 +464,7 @@ void SubsonicService::GetPlaylists() {
 
 void SubsonicService::GetPlaylistSongs(const QString &playlist_id, const QString &playlist_name) {
 
-  qLog(Debug) << "SubsonicService::GetPlaylistSongs" << playlist_id << playlist_name;
+  qLog(Info) << "SubsonicService::GetPlaylistSongs" << playlist_id << playlist_name;
 
   if (!server_url().isValid()) {
     Q_EMIT PlaylistSongsReceived(SongList(), playlist_name, tr("Server URL is invalid."));
@@ -510,7 +510,7 @@ void SubsonicService::PingError(const QString &error, const QVariant &debug) {
     qLog(Error) << "Subsonic:" << e;
     error_html += e + "<br />"_L1;
   }
-  if (debug.isValid()) qLog(Debug) << debug;
+  if (debug.isValid()) qLog(Info) << debug;
 
   Q_EMIT TestFailure(error_html);
   Q_EMIT TestComplete(false, error_html);

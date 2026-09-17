@@ -3728,13 +3728,18 @@ void MainWindow::ProcessMetadataQueue() {
 
 void MainWindow::ImportSubsonicPlaylist() {
 
+  qLog(Info) << "MainWindow: Import button clicked - requesting playlists";
   if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
     subsonicservice->GetPlaylists();
+  } else {
+    qLog(Info) << "MainWindow: ERROR - SubsonicService lookup FAILED";
   }
 
 }
 
 void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error) {
+
+  qLog(Info) << "MainWindow::SubsonicPlaylistsReceived" << playlists.size() << "error:" << error;
 
   if (!error.isEmpty()) {
     QMessageBox::warning(this, tr("Error"), tr("Failed to get playlists from Subsonic server: %1").arg(error));
@@ -3753,13 +3758,16 @@ void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playl
 
   bool ok = false;
   const QString selected = QInputDialog::getItem(this, tr("Import from Subsonic server"), tr("Select a playlist to import:"), names, 0, false, &ok);
+  qLog(Info) << "MainWindow: User selected:" << selected << "ok:" << ok;
   if (!ok || selected.isEmpty()) {
     return;
   }
 
   for (const SubsonicPlaylistInfo &playlist : playlists) {
+    qLog(Info) << "MainWindow: Comparing" << playlist.name << "==" << selected << "?" << (playlist.name == selected);
     if (playlist.name == selected) {
       if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+        qLog(Info) << "MainWindow: MATCH - calling GetPlaylistSongs for" << playlist.id << playlist.name;
         subsonicservice->GetPlaylistSongs(playlist.id, playlist.name);
       }
       break;
@@ -3770,7 +3778,7 @@ void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playl
 
 void MainWindow::SubsonicPlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error) {
 
-  qLog(Debug) << "MainWindow: playlist songs received" << songs.size() << playlist_name << error;
+  qLog(Info) << "MainWindow: playlist songs received" << songs.size() << playlist_name << error;
 
   if (!error.isEmpty()) {
     QMessageBox::warning(this, tr("Error"), tr("Failed to get playlist from Subsonic server: %1").arg(error));
