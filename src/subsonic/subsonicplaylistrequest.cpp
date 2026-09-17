@@ -197,7 +197,7 @@ void SubsonicPlaylistRequest::GetPlaylistSongs(const QString &playlist_id, const
 
 void SubsonicPlaylistRequest::PlaylistSongsReplyReceived(QNetworkReply *reply, const QString &playlist_id, const QString &playlist_name) {
 
-  qLog(Debug) << "SubsonicPlaylistRequest: playlist songs reply received" << reply->error() << playlist_name;
+  qLog(Info) << "SubsonicPlaylistRequest: playlist songs reply received" << reply->error() << playlist_name;
 
   Q_UNUSED(playlist_id);
   if (!replies_.contains(reply)) return;
@@ -395,7 +395,7 @@ void SubsonicPlaylistRequest::ParseSong(Song &song, const QJsonObject &json_obje
       if (filetype != Song::FileType::Unknown) break;
     }
     if (filetype == Song::FileType::Unknown) {
-      qLog(Debug) << "Subsonic: Unknown mimetype" << mimetype;
+      qLog(Info) << "Subsonic: Unknown mimetype" << mimetype;
       filetype = Song::FileType::Stream;
     }
   }
@@ -444,6 +444,6 @@ void SubsonicPlaylistRequest::Error(const QString &error, const QVariant &debug)
     qLog(Error) << "Subsonic:" << error;
     errors_ << error;
   }
-  if (debug.isValid()) qLog(Debug) << debug;
+  if (debug.isValid()) qLog(Info) << debug;
 
 }
