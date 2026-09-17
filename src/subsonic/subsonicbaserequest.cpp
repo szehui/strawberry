@@ -38,6 +38,7 @@
 #include <QJsonObject>
 #include <QJsonValue>
 
+#include "core/logging.h"
 #include "core/networkaccessmanager.h"
 #include "utilities/randutils.h"
 #include "subsonicservice.h"
