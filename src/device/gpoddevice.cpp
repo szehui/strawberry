@@ -229,7 +229,7 @@ bool GPodDevice::CopyToStorage(const CopyJob &job, QString &error_text) {
       return false;
     }
 
-    RemoteFileDownloader downloader(new NetworkAccessManager(this), this);
+    RemoteFileDownloader downloader(make_shared<NetworkAccessManager>(this), this);
     QString download_error;
     local_source = downloader.DownloadBlocking(download_url, job.metadata_.basefilename(), &download_error);
     if (local_source.isEmpty()) {
