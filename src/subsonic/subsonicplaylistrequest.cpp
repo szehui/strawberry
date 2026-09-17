@@ -188,8 +188,10 @@ void SubsonicPlaylistRequest::GetPlaylistSongs(const QString &playlist_id, const
 
   playlist_name_requested_ = playlist_name;
 
+  qLog(Info) << "SubsonicPlaylistRequest::GetPlaylistSongs requesting" << playlist_id << playlist_name;
   QNetworkReply *reply = CreateGetRequest(u"getPlaylist"_s, ParamList() << Param(u"id"_s, playlist_id));
   replies_ << reply;
+  qLog(Info) << "SubsonicPlaylistRequest: reply created" << static_cast<void*>(reply);
   QObject::connect(reply, &QNetworkReply::finished, this, [this, reply, playlist_id, playlist_name]() { PlaylistSongsReplyReceived(reply, playlist_id, playlist_name); });
   timeouts_->AddReply(reply);
 

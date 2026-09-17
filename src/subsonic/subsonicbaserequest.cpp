@@ -95,6 +95,7 @@ QUrl SubsonicBaseRequest::CreateUrl(const QUrl &server_url, const SubsonicSettin
 QNetworkReply *SubsonicBaseRequest::CreateGetRequest(const QString &ressource_name, const ParamList &params_provided) const {
 
   const QUrl url = CreateUrl(server_url(), auth_method(), username(), password(), ressource_name, params_provided);
+  qLog(Info) << "SubsonicBaseRequest::CreateGetRequest" << ressource_name << "url:" << url.toString(QUrl::ComponentFormattingOption::PrettyDecoded);
   QNetworkRequest network_request(url);
 
   if (url.scheme() == "https"_L1 && !verify_certificate()) {
@@ -112,6 +113,9 @@ QNetworkReply *SubsonicBaseRequest::CreateGetRequest(const QString &ressource_na
 
   QNetworkReply *reply = network_->get(network_request);
   QObject::connect(reply, &QNetworkReply::sslErrors, this, &SubsonicBaseRequest::HandleSSLErrors);
+  QObject::connect(reply, &QNetworkReply::errorOccurred, this, [reply](QNetworkReply::NetworkError error) {
+    qLog(Info) << "SubsonicBaseRequest: reply errorOccurred" << error << reply->errorString();
+  });
 
   // qLog(Debug) << "Subsonic: Sending request" << url;
 
