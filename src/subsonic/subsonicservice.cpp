@@ -453,9 +453,11 @@ void SubsonicService::GetPlaylists() {
 
   ResetPlaylistRequest();
   playlist_request_.reset(new SubsonicPlaylistRequest(this, url_handler_, network_), [](SubsonicPlaylistRequest *request) { request->deleteLater(); });
-  QObject::connect(&*playlist_request_, &SubsonicPlaylistRequest::PlaylistsReceived, this, [this](const SubsonicPlaylistInfoList &playlists, const QString &error) {
+  SubsonicPlaylistRequest *request = playlist_request_.get();
+  QObject::connect(&*playlist_request_, &SubsonicPlaylistRequest::PlaylistsReceived, this, [this, request](const SubsonicPlaylistInfoList &playlists, const QString &error) {
     Q_EMIT PlaylistsReceived(playlists, error);
-    ResetPlaylistRequest();
+    // The slot above may start a new request (for example when a playlist is imported), in which case playlist_request_ no longer refers to this request and must not be reset here.
+    if (playlist_request_.get() == request) ResetPlaylistRequest();
   });
 
   playlist_request_->GetPlaylists();
