@@ -29,6 +29,7 @@
 
 #include "includes/shared_ptr.h"
 
+class QNetworkReply;
 class NetworkAccessManager;
 
 // Downloads a remote URL to a temporary local file, blocking until done.
