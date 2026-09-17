@@ -39,6 +39,7 @@
 #include <QJsonValue>
 
 #include "includes/shared_ptr.h"
+#include "core/logging.h"
 #include "core/networkaccessmanager.h"
 #include "utilities/strutils.h"
 #include "utilities/randutils.h"
