@@ -1450,9 +1450,11 @@ optional_source(HAVE_GPOD
   SOURCES
     src/device/gpoddevice.cpp
     src/device/gpodloader.cpp
+    src/device/remotefiledownloader.cpp
   HEADERS
     src/device/gpoddevice.h
     src/device/gpodloader.h
+    src/device/remotefiledownloader.h
 )
 
 optional_source(HAVE_SUBSONIC

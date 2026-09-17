@@ -39,6 +39,7 @@
 
 #include "includes/shared_ptr.h"
 #include "core/logging.h"
+#include "core/networkaccessmanager.h"
 #include "core/standardpaths.h"
 #include "core/temporaryfile.h"
 #include "core/taskmanager.h"
@@ -49,6 +50,7 @@
 #include "connecteddevice.h"
 #include "gpoddevice.h"
 #include "gpodloader.h"
+#include "remotefiledownloader.h"
 
 class DeviceLister;
 class DeviceManager;
@@ -210,6 +212,35 @@ bool GPodDevice::CopyToStorage(const CopyJob &job, QString &error_text) {
 
   Q_ASSERT(db_);
 
+  QString local_source = job.source_;
+
+  // If the source is a remote URL (for example a Subsonic/Navidrome stream), download it to a temporary file first.
+  const QUrl source_url = job.metadata_.url();
+  const bool is_remote = source_url.isValid() && !source_url.isLocalFile() && !source_url.scheme().isEmpty() && source_url.scheme() != u"file"_s;
+
+  if (is_remote) {
+
+    QString resolve_error;
+    const QUrl download_url = RemoteFileDownloader::ResolveUrl(source_url, &resolve_error);
+    if (!download_url.isValid()) {
+      error_text = tr("Could not resolve %1: %2").arg(source_url.toString(), resolve_error);
+      qLog(Error) << error_text;
+      Q_EMIT Error(error_text);
+      return false;
+    }
+
+    RemoteFileDownloader downloader(new NetworkAccessManager(this), this);
+    QString download_error;
+    local_source = downloader.DownloadBlocking(download_url, job.metadata_.basefilename(), &download_error);
+    if (local_source.isEmpty()) {
+      error_text = tr("Could not download %1: %2").arg(source_url.toString(), download_error);
+      qLog(Error) << error_text;
+      Q_EMIT Error(error_text);
+      return false;
+    }
+
+  }
+
   Itdb_Track *track = AddTrackToITunesDb(job.metadata_);
 
   if (job.albumcover_) {
@@ -255,9 +286,9 @@ bool GPodDevice::CopyToStorage(const CopyJob &job, QString &error_text) {
 
   // Copy the file
   GError *error = nullptr;
-  itdb_cp_track_to_ipod(track, QDir::toNativeSeparators(job.source_).toLocal8Bit().constData(), &error);
+  itdb_cp_track_to_ipod(track, QDir::toNativeSeparators(local_source).toLocal8Bit().constData(), &error);
   if (error) {
-    error_text = tr("Could not copy %1 to %2: %3").arg(job.metadata_.url().toLocalFile(), url_.path(), QString::fromUtf8(error->message));
+    error_text = tr("Could not copy %1 to %2: %3").arg(is_remote ? source_url.toString() : job.metadata_.url().toLocalFile(), url_.path(), QString::fromUtf8(error->message));
     g_error_free(error);
     qLog(Error) << error_text;
     Q_EMIT Error(error_text);
@@ -286,6 +317,11 @@ bool GPodDevice::CopyToStorage(const CopyJob &job, QString &error_text) {
   // Remove the original if it was requested
   if (job.remove_original_) {
     QFile::remove(job.source_);
+  }
+
+  // Remove the downloaded temporary file, if there was one
+  if (is_remote && !local_source.isEmpty()) {
+    QFile::remove(local_source);
   }
 
   return true;
