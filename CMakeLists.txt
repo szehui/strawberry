@@ -1592,10 +1592,12 @@ if(HAVE_GPOD)
   list(APPEND SOURCES
     src/device/gpoddevice.cpp
     src/device/gpodloader.cpp
+    src/device/remotefiledownloader.cpp
   )
   list(APPEND HEADERS
     src/device/gpoddevice.h
     src/device/gpodloader.h
+    src/device/remotefiledownloader.h
   )
 endif()
 
