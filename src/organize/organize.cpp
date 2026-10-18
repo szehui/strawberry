@@ -47,6 +47,8 @@
 #include "tagreader/tagreaderclient.h"
 #include "organize.h"
 #include "transcoder/transcoder.h"
+#include "core/networkaccessmanager.h"
+#include "device/remotefiledownloader.h"
 
 using namespace std::chrono_literals;
 
@@ -193,11 +195,40 @@ void Organize::ProcessSomeFiles() {
       continue;
     }
 
-    // Remote songs (e.g. Subsonic/Navidrome streams) are downloaded by the device's CopyToStorage.
-    // Skip local-file-specific logic (transcoding and local source paths) for them.
+    // Remote songs (e.g. Subsonic/Navidrome streams) are downloaded to a temporary local file first,
+    // then processed through the normal (transcode-capable) path below.
     const bool is_remote_song = song.url().isValid() && !song.url().isLocalFile() && !song.url().scheme().isEmpty();
 
     qLog(Info) << "Processing" << (is_remote_song ? song.url().toString(QUrl::ComponentFormattingOption::PrettyDecoded) : song.url().toLocalFile());
+
+    // Download remote songs to a temporary local file so they can be transcoded like local files.
+    if (is_remote_song && task.transcoded_filename_.isEmpty()) {
+      QString resolve_error;
+      const QUrl download_url = RemoteFileDownloader::ResolveUrl(song.url(), &resolve_error);
+      if (!download_url.isValid()) {
+        const QString error_text = tr("Could not resolve %1: %2").arg(song.url().toString(), resolve_error);
+        qLog(Error) << error_text;
+        files_with_errors_ << song.basefilename();
+        log_ << error_text;
+        tasks_complete_++;
+        continue;
+      }
+      RemoteFileDownloader downloader(std::make_shared<NetworkAccessManager>(this), this);
+      QString download_error;
+      const QString local_file = downloader.DownloadBlocking(download_url, song.basefilename(), &download_error);
+      if (local_file.isEmpty()) {
+        const QString error_text = tr("Could not download %1: %2").arg(song.url().toString(), download_error);
+        qLog(Error) << error_text;
+        files_with_errors_ << song.basefilename();
+        log_ << error_text;
+        tasks_complete_++;
+        continue;
+      }
+      task.song_info_.song_.set_url(QUrl::fromLocalFile(local_file));
+      task.song_info_.song_.set_basefilename(QFileInfo(local_file).fileName());
+      task.song_info_.song_.set_filesize(QFileInfo(local_file).size());
+      song = task.song_info_.song_;
+    }
 
     // Maybe this file is one that's been transcoded already?
     if (!task.transcoded_filename_.isEmpty()) {
@@ -267,12 +298,6 @@ void Organize::ProcessSomeFiles() {
     job.source_ = task.transcoded_filename_.isEmpty() ? task.song_info_.song_.url().toLocalFile() : task.transcoded_filename_;
     // The source of a transcoded file is a temporary file, which is removed below, so the original is removed instead.
     job.original_source_ = task.song_info_.song_.url().toLocalFile();
-    // For remote songs (Subsonic/Navidrome streams), the device downloads from job.metadata_.url().
-    // Keep the raw remote URL encoded in the metadata so the device can resolve it.
-    if (is_remote_song) {
-      job.source_ = task.song_info_.song_.url().toString(QUrl::ComponentFormattingOption::FullyDecoded);
-      job.original_source_ = job.source_;
-    }
     job.destination_ = task.song_info_.new_filename_;
     job.metadata_ = song;
     job.overwrite_ = overwrite_;
