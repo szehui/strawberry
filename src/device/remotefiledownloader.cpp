@@ -57,7 +57,7 @@ RemoteFileDownloader::~RemoteFileDownloader() {
 
 QUrl RemoteFileDownloader::ResolveUrl(const QUrl &url, QString *error) {
 
-  if (url.scheme() != QLatin1String(SubsonicSettings::kSettingsGroup)) {
+  if (url.scheme().compare(QLatin1String(SubsonicSettings::kSettingsGroup), Qt::CaseInsensitive) != 0) {
     return url;  // Not a scheme we know - return unchanged and let the caller handle it.
   }
 
@@ -86,7 +86,12 @@ QUrl RemoteFileDownloader::ResolveUrl(const QUrl &url, QString *error) {
   using ParamList = QList<Param>;
 
   // Build the authenticated stream URL: the URL path is the song id.
-  const QUrl resolved = SubsonicBaseRequest::CreateUrl(server_url, auth_method, username, password, u"stream"_s, ParamList() << Param(u"id"_s, url.path()));
+  // Note: url.path() may start with a leading slash; we need to remove it for the ID.
+  QString song_id = url.path();
+  if (song_id.startsWith(QLatin1Char('/'))) {
+    song_id.remove(0, 1);
+  }
+  const QUrl resolved = SubsonicBaseRequest::CreateUrl(server_url, auth_method, username, password, u"stream"_s, ParamList() << Param(u"id"_s, song_id));
   return resolved;
 
 }
