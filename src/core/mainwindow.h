@@ -233,6 +233,7 @@ class MainWindow : public QMainWindow, public PlatformInterface {
   void SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error);
   void SubsonicPlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error);
   void SyncNavidromePlaylists();
+  void DispatchNextNavidromeSyncPlaylist();
   void NavidromePlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error);
   void NavidromePlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error);
 #endif
@@ -387,7 +388,8 @@ class MainWindow : public QMainWindow, public PlatformInterface {
 
 #ifdef HAVE_SUBSONIC
   StreamingLibraryView *subsonic_view_;
-  QHash<QString, QString> navidrome_sync_pending_;  // remote_id -> remote_name
+  QHash<QString, QString> navidrome_sync_pending_;  // remote_id -> remote_name (responses awaited)
+  QHash<QString, QString> navidrome_sync_queue_;    // remote_id -> remote_name (not yet dispatched)
   int navidrome_sync_total_;
   int navidrome_sync_completed_;
   QStringList navidrome_sync_errors_;
