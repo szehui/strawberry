@@ -187,14 +187,17 @@ void Organize::ProcessSomeFiles() {
     if (tasks_pending_.isEmpty()) break;
 
     Task task = tasks_pending_.takeFirst();
-    qLog(Info) << "Processing" << task.song_info_.song_.url().toLocalFile();
-
-    // Use a Song instead of a tag reader
     Song song = task.song_info_.song_;
     if (!song.is_valid()) {
       tasks_complete_++;  // Otherwise progress never reaches 100%.
       continue;
     }
+
+    // Remote songs (e.g. Subsonic/Navidrome streams) are downloaded by the device's CopyToStorage.
+    // Skip local-file-specific logic (transcoding and local source paths) for them.
+    const bool is_remote_song = song.url().isValid() && !song.url().isLocalFile() && !song.url().scheme().isEmpty();
+
+    qLog(Info) << "Processing" << (is_remote_song ? song.url().toString(QUrl::ComponentFormattingOption::PrettyDecoded) : song.url().toLocalFile());
 
     // Maybe this file is one that's been transcoded already?
     if (!task.transcoded_filename_.isEmpty()) {
@@ -211,7 +214,7 @@ void Organize::ProcessSomeFiles() {
       // Have to set this to the size of the new file or else funny stuff happens
       song.set_filesize(QFileInfo(task.transcoded_filename_).size());
     }
-    else {
+    else if (!is_remote_song) {
       // Figure out if we need to transcode it
       Song::FileType dest_type = CheckTranscode(song.filetype());
       if (dest_type != Song::FileType::Unknown) {
@@ -249,7 +252,7 @@ void Organize::ProcessSomeFiles() {
     }
 
     // Make the filename unique among the songs copied, transcoded songs got their filename when transcoding was started.
-    if (task.transcoded_filename_.isEmpty() && task.song_info_.unique_filename_) {
+    if (task.transcoded_filename_.isEmpty() && task.song_info_.unique_filename_ && !is_remote_song) {
       task.song_info_.new_filename_ = unique_filenames_.Make(task.song_info_.new_filename_, task.song_info_.song_.url().toLocalFile());
     }
 
@@ -264,6 +267,12 @@ void Organize::ProcessSomeFiles() {
     job.source_ = task.transcoded_filename_.isEmpty() ? task.song_info_.song_.url().toLocalFile() : task.transcoded_filename_;
     // The source of a transcoded file is a temporary file, which is removed below, so the original is removed instead.
     job.original_source_ = task.song_info_.song_.url().toLocalFile();
+    // For remote songs (Subsonic/Navidrome streams), the device downloads from job.metadata_.url().
+    // Keep the raw remote URL encoded in the metadata so the device can resolve it.
+    if (is_remote_song) {
+      job.source_ = task.song_info_.song_.url().toString(QUrl::ComponentFormattingOption::FullyDecoded);
+      job.original_source_ = job.source_;
+    }
     job.destination_ = task.song_info_.new_filename_;
     job.metadata_ = song;
     job.overwrite_ = overwrite_;

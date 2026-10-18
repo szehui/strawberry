@@ -3993,7 +3993,6 @@ void MainWindow::SyncNavidromePlaylists() {
 
   qLog(Info) << "MainWindow: Sync Navidrome playlists clicked - requesting playlists";
   navidrome_sync_mode_ = true;
-  navidrome_sync_pending_.clear();
   navidrome_sync_queue_.clear();
   navidrome_sync_errors_.clear();
   navidrome_sync_total_ = 0;
@@ -4066,7 +4065,7 @@ void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playl
   navidrome_sync_total_ = playlists.count();
   navidrome_sync_queue_.clear();
   for (const SubsonicPlaylistInfo &playlist : playlists) {
-    navidrome_sync_queue_.insert(playlist.id, playlist.name);
+    navidrome_sync_queue_.enqueue({ playlist.id, playlist.name });
   }
   qLog(Info) << "MainWindow: sync - dispatching first of" << navidrome_sync_queue_.size() << "playlists";
   DispatchNextNavidromeSyncPlaylist();
@@ -4077,10 +4076,9 @@ void MainWindow::DispatchNextNavidromeSyncPlaylist() {
 
   if (navidrome_sync_queue_.isEmpty()) return;
 
-  const auto it = navidrome_sync_queue_.constBegin();
-  const QPair<QString, QString> next{ it.key(), it.value() };
-  navidrome_sync_queue_.erase(it);
-  navidrome_sync_pending_.insert(next.first, next.second);
+  const QPair<QString, QString> next = navidrome_sync_queue_.dequeue();
+  navidrome_sync_current_ = next.first;
+  navidrome_sync_current_name_ = next.second.trimmed();
 
   if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
     qLog(Info) << "MainWindow: sync - calling GetPlaylistSongs for" << next.first << next.second;
@@ -4111,15 +4109,16 @@ void MainWindow::SubsonicPlaylistSongsReceived(const SongList &songs, const QStr
 
   }
 
-  // Batch sync mode: find the remote playlist ID matching this name.
+  // Batch sync mode: match this response to the playlist that is currently in flight.
   QString remote_id;
-  QHashIterator<QString, QString> it(navidrome_sync_pending_);
-  while (it.hasNext()) {
-    it.next();
-    if (it.value() == playlist_name) {
-      remote_id = it.key();
-      break;
-    }
+  if (playlist_name.trimmed() == navidrome_sync_current_name_) {
+    remote_id = navidrome_sync_current_;
+  }
+  else {
+    // Fallback: match by name against any queued entries (robust if ordering is off).
+    const QString playlist_name_trimmed = playlist_name.trimmed();
+    const auto it = std::find_if(navidrome_sync_queue_.cbegin(), navidrome_sync_queue_.cend(), [&](const QPair<QString, QString> &entry) { return entry.second.trimmed() == playlist_name_trimmed; });
+    if (it != navidrome_sync_queue_.cend()) remote_id = it->first;
   }
 
   if (!error.isEmpty()) {
@@ -4149,25 +4148,16 @@ void MainWindow::SubsonicPlaylistSongsReceived(const SongList &songs, const QStr
     }
   }
 
-  if (!remote_id.isEmpty() && !navidrome_sync_pending_.contains(remote_id)) {
-    // Song response with no matching pending playlist (e.g. a stale response after a reset).
-    // Do not count it toward the total.
-  }
-  else {
-    if (!remote_id.isEmpty()) navidrome_sync_pending_.remove(remote_id);
-    ++navidrome_sync_completed_;
-  }
+  ++navidrome_sync_completed_;
+  navidrome_sync_current_.clear();
+  navidrome_sync_current_name_.clear();
 
   qLog(Info) << "MainWindow: sync progress" << navidrome_sync_completed_ << "/" << navidrome_sync_total_ << "queue remaining:" << navidrome_sync_queue_.size();
 
   DispatchNextNavidromeSyncPlaylist();
 
-  // All playlists dispatched AND all responses received (queued ones will each produce a response).
-  const bool all_dispatched = (navidrome_sync_completed_ + navidrome_sync_queue_.size()) >= navidrome_sync_total_;
-  const bool all_received = navidrome_sync_queue_.isEmpty() && navidrome_sync_pending_.isEmpty();
-  if (navidrome_sync_mode_ && (all_received && all_dispatched) && (navidrome_sync_completed_ >= navidrome_sync_total_ || navidrome_sync_pending_.isEmpty())) {
+  if (navidrome_sync_mode_ && navidrome_sync_queue_.isEmpty() && navidrome_sync_completed_ >= navidrome_sync_total_) {
     navidrome_sync_mode_ = false;
-    navidrome_sync_pending_.clear();
     if (navidrome_sync_errors_.isEmpty()) {
       QMessageBox::information(this, tr("Sync Navidrome playlists"), tr("Successfully synced %1 playlist(s) from Navidrome.").arg(navidrome_sync_completed_));
     }

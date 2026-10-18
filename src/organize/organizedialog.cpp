@@ -355,12 +355,7 @@ bool OrganizeDialog::SetSongs(const SongList &songs) {
   songs_.clear();
 
   for (const Song &song : songs) {
-    if (!song.url().isLocalFile()) {
-      continue;
-    }
-
-    if (song.filesize() > 0) total_size_ += song.filesize();
-
+    if (song.url().isLocalFile() && song.filesize() > 0) total_size_ += song.filesize();
     songs_ << song;
   }
 
