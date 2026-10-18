@@ -131,6 +131,7 @@ add_test_file(src/scrobblercache_test.cpp false)
 if(HAVE_MOODBAR)
   add_test_file(src/moodbarbuilder_test.cpp false)
   add_test_file(src/moodbarpipeline_test.cpp false)
+endif()
 if(HAVE_SUBSONIC)
   # SubsonicPlaylistRequest JSON parsing tests
   add_executable(subsonicplaylistrequest_test EXCLUDE_FROM_ALL src/subsonicplaylistrequest_test.cpp)
