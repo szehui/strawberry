@@ -568,6 +568,7 @@ void SubsonicService::ResetPlaylistRequest() {
   if (playlist_request_) {
     QObject::disconnect(&*playlist_request_, nullptr, this, nullptr);
     QObject::disconnect(this, nullptr, &*playlist_request_, nullptr);
+    playlist_request_->deleteLater();  // Safe: survives until event loop returns
     playlist_request_.reset();
   }
 
@@ -616,7 +617,9 @@ void SubsonicService::GetPlaylistSongs(const QString &playlist_id, const QString
   playlist_request_.reset(new SubsonicPlaylistRequest(this, url_handler_, network_), [](SubsonicPlaylistRequest *request) { request->deleteLater(); });
   QObject::connect(&*playlist_request_, &SubsonicPlaylistRequest::SongsReceived, this, [this](const SongList &songs, const QString &playlist, const QString &error) {
     Q_EMIT PlaylistSongsReceived(songs, playlist, error);
-    ResetPlaylistRequest();
+    // Do NOT reset the request here: the signal emission chain may have already
+    // created a new request for the next playlist, and resetting now would
+    // destroy it and abort its in-flight reply.
   });
 
   playlist_request_->GetPlaylistSongs(playlist_id, playlist_name);
