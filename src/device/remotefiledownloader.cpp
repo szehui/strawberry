@@ -31,6 +31,7 @@
 #include "core/networkaccessmanager.h"
 #include "core/logging.h"
 #include "core/standardpaths.h"
+#include "core/settings.h"
 #include "subsonic/subsonicbaserequest.h"
 #include "constants/subsonicsettings.h"
 #include "remotefiledownloader.h"
@@ -62,7 +63,9 @@ QUrl RemoteFileDownloader::ResolveUrl(const QUrl &url, QString *error) {
   }
 
   // Read the Subsonic settings (same place SubsonicService::ReloadSettings does).
-  QSettings s;
+  // Must use Settings (not plain QSettings) so it reads ~/.config/strawberry/strawberry.conf,
+  // not the differently-cased QSettings default path.
+  Settings s;
   s.beginGroup(QLatin1String(SubsonicSettings::kSettingsGroup));
   const QUrl server_url = s.value(QLatin1String(SubsonicSettings::kUrl)).toUrl();
   const QString username = s.value(QLatin1String(SubsonicSettings::kUsername)).toString();
