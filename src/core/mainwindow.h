@@ -388,8 +388,9 @@ class MainWindow : public QMainWindow, public PlatformInterface {
 
 #ifdef HAVE_SUBSONIC
   StreamingLibraryView *subsonic_view_;
-  QHash<QString, QString> navidrome_sync_pending_;  // remote_id -> remote_name (responses awaited)
-  QHash<QString, QString> navidrome_sync_queue_;    // remote_id -> remote_name (not yet dispatched)
+  QQueue<QPair<QString, QString>> navidrome_sync_queue_;  // (remote_id, remote_name) in dispatch order
+  QString navidrome_sync_current_;      // remote_id currently in flight
+  QString navidrome_sync_current_name_;  // remote_name currently in flight
   int navidrome_sync_total_;
   int navidrome_sync_completed_;
   QStringList navidrome_sync_errors_;
