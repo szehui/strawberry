@@ -132,7 +132,7 @@ QString RemoteFileDownloader::DownloadBlocking(const QUrl &url, const QString &s
   if (safe_name.size() > 80) safe_name = safe_name.right(80);
 
   QTemporaryFile temp_file(temp_dir + u"/strawberry-dl-XXXXXX-"_s + safe_name);
-  temp_file.setAutoRemove(true);
+  temp_file.setAutoRemove(false);  // Caller (GPodDevice) removes after copy
   if (!temp_file.open()) {
     if (error) *error = u"Could not create temporary file in "_s + temp_dir;
     return QString();
