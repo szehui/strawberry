@@ -88,6 +88,13 @@ class PlaylistBackend : public QObject {
   void FavoritePlaylist(const int id, bool is_favorite);
   void RemovePlaylist(const int id);
 
+  // Navidrome (Subsonic) playlist linking
+  void LinkNavidromePlaylist(const int local_playlist_id, const QString &remote_playlist_id, const QString &remote_playlist_name);
+  void UnlinkNavidromePlaylist(const int local_playlist_id);
+  QString GetNavidromePlaylistId(const int local_playlist_id);
+  QHash<int, QString> GetNavidromeLinkedPlaylists();  // local_id -> remote_id
+  void UpdateNavidromeLastSynced(const int local_playlist_id);
+
  public Q_SLOTS:
   void Exit();
   void SavePlaylist(const int playlist_id, const PlaylistItemSaveDataList &items, const int last_played, PlaylistGeneratorPtr dynamic);

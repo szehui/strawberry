@@ -225,6 +225,9 @@ class MainWindow : public QMainWindow, public PlatformInterface {
   void ImportSubsonicPlaylist();
   void SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error);
   void SubsonicPlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error);
+  void SyncNavidromePlaylists();
+  void NavidromePlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error);
+  void NavidromePlaylistSongsReceived(const SongList &songs, const QString &playlist_name, const QString &error);
 #endif
 
   void ReloadSettings();
@@ -365,6 +368,11 @@ class MainWindow : public QMainWindow, public PlatformInterface {
 
 #ifdef HAVE_SUBSONIC
   StreamingSongsView *subsonic_view_;
+  QHash<QString, QString> navidrome_sync_pending_;  // remote_id -> remote_name
+  int navidrome_sync_total_;
+  int navidrome_sync_completed_;
+  QStringList navidrome_sync_errors_;
+  bool navidrome_sync_mode_;  // true while a batch sync is in progress (distinguishes sync from single-import)
 #endif
 #ifdef HAVE_TIDAL
   StreamingTabsView *tidal_view_;

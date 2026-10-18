@@ -209,6 +209,30 @@ void PlaylistManager::New(const QString &name, const SongList &songs, const QStr
 
 }
 
+void PlaylistManager::SyncPlaylistFromNavidrome(const int local_playlist_id, const QString &remote_playlist_id, const QString &remote_playlist_name, const SongList &songs) {
+
+  if (!playlists_.contains(local_playlist_id)) return;
+
+  Playlist *playlist = playlists_[local_playlist_id].p;
+
+  // Clear all existing items.
+  QList<int> all_indices;
+  all_indices.reserve(playlist->rowCount());
+  for (int i = 0; i < playlist->rowCount(); ++i) {
+    all_indices << i;
+  }
+  if (!all_indices.isEmpty()) {
+    RemoveItemsWithoutUndo(local_playlist_id, all_indices);
+  }
+
+  if (!songs.isEmpty()) {
+    InsertSongs(local_playlist_id, songs);
+  }
+
+  playlist_backend_->LinkNavidromePlaylist(local_playlist_id, remote_playlist_id, remote_playlist_name);
+
+}
+
 void PlaylistManager::Load(const QString &filename) {
 
   QFileInfo fileinfo(filename);

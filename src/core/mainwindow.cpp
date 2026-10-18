@@ -820,6 +820,11 @@ MainWindow::MainWindow(Application *app,
   QObject::connect(subsonic_view_, &StreamingSongsView::OpenSettingsDialog, this, &MainWindow::OpenServiceSettingsDialog);
   QObject::connect(subsonic_view_->view(), &StreamingCollectionView::AddToPlaylistSignal, this, &MainWindow::AddToPlaylist);
   QObject::connect(ui_->action_import_subsonic_playlist, &QAction::triggered, this, &MainWindow::ImportSubsonicPlaylist);
+  navidrome_sync_mode_ = false;
+  navidrome_sync_total_ = 0;
+  navidrome_sync_completed_ = 0;
+  QAction *action_sync_navidrome_playlists = ui_->menu_tools->addAction(tr("Sync Navidrome playlists..."), this, &MainWindow::SyncNavidromePlaylists);
+  action_sync_navidrome_playlists->setIcon(IconLoader::Load(u"view-refresh"_s));
   if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
     QObject::connect(&*subsonicservice, &SubsonicService::PlaylistsReceived, this, &MainWindow::SubsonicPlaylistsReceived);
     QObject::connect(&*subsonicservice, &SubsonicService::PlaylistSongsReceived, this, &MainWindow::SubsonicPlaylistSongsReceived);
@@ -3729,6 +3734,7 @@ void MainWindow::ProcessMetadataQueue() {
 void MainWindow::ImportSubsonicPlaylist() {
 
   qLog(Info) << "MainWindow: Import button clicked - requesting playlists";
+  navidrome_sync_mode_ = false;
   if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
     subsonicservice->GetPlaylists();
   } else {
@@ -3737,40 +3743,86 @@ void MainWindow::ImportSubsonicPlaylist() {
 
 }
 
+void MainWindow::SyncNavidromePlaylists() {
+
+  qLog(Info) << "MainWindow: Sync Navidrome playlists clicked - requesting playlists";
+  navidrome_sync_mode_ = true;
+  navidrome_sync_pending_.clear();
+  navidrome_sync_errors_.clear();
+  navidrome_sync_total_ = 0;
+  navidrome_sync_completed_ = 0;
+  if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+    subsonicservice->GetPlaylists();
+  } else {
+    qLog(Info) << "MainWindow: ERROR - SubsonicService lookup FAILED";
+    navidrome_sync_mode_ = false;
+  }
+
+}
+
 void MainWindow::SubsonicPlaylistsReceived(const SubsonicPlaylistInfoList &playlists, const QString &error) {
 
   qLog(Info) << "MainWindow::SubsonicPlaylistsReceived" << playlists.size() << "error:" << error;
 
+  if (!navidrome_sync_mode_) {
+
+    if (!error.isEmpty()) {
+      QMessageBox::warning(this, tr("Error"), tr("Failed to get playlists from Subsonic server: %1").arg(error));
+      return;
+    }
+
+    if (playlists.isEmpty()) {
+      QMessageBox::information(this, tr("Import from Subsonic server"), tr("There are no playlists on the Subsonic server."));
+      return;
+    }
+
+    QStringList names;
+    for (const SubsonicPlaylistInfo &playlist : playlists) {
+      names << playlist.name;
+    }
+
+    bool ok = false;
+    const QString selected = QInputDialog::getItem(this, tr("Import from Subsonic server"), tr("Select a playlist to import:"), names, 0, false, &ok);
+    qLog(Info) << "MainWindow: User selected:" << selected << "ok:" << ok;
+    if (!ok || selected.isEmpty()) {
+      return;
+    }
+
+    for (const SubsonicPlaylistInfo &playlist : playlists) {
+      qLog(Info) << "MainWindow: Comparing" << playlist.name << "==" << selected << "?" << (playlist.name == selected);
+      if (playlist.name == selected) {
+        if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+          qLog(Info) << "MainWindow: MATCH - calling GetPlaylistSongs for" << playlist.id << playlist.name;
+          subsonicservice->GetPlaylistSongs(playlist.id, playlist.name);
+        }
+        break;
+      }
+    }
+
+    return;
+
+  }
+
+  // Batch sync mode.
   if (!error.isEmpty()) {
-    QMessageBox::warning(this, tr("Error"), tr("Failed to get playlists from Subsonic server: %1").arg(error));
+    navidrome_sync_mode_ = false;
+    QMessageBox::warning(this, tr("Error"), tr("Failed to get playlists from Navidrome server: %1").arg(error));
     return;
   }
 
   if (playlists.isEmpty()) {
-    QMessageBox::information(this, tr("Import from Subsonic server"), tr("There are no playlists on the Subsonic server."));
+    navidrome_sync_mode_ = false;
+    QMessageBox::information(this, tr("Sync Navidrome playlists"), tr("There are no playlists on the Navidrome server."));
     return;
   }
 
-  QStringList names;
-  for (const SubsonicPlaylistInfo &playlist : playlists) {
-    names << playlist.name;
-  }
-
-  bool ok = false;
-  const QString selected = QInputDialog::getItem(this, tr("Import from Subsonic server"), tr("Select a playlist to import:"), names, 0, false, &ok);
-  qLog(Info) << "MainWindow: User selected:" << selected << "ok:" << ok;
-  if (!ok || selected.isEmpty()) {
-    return;
-  }
+  navidrome_sync_total_ = playlists.count();
 
   for (const SubsonicPlaylistInfo &playlist : playlists) {
-    qLog(Info) << "MainWindow: Comparing" << playlist.name << "==" << selected << "?" << (playlist.name == selected);
-    if (playlist.name == selected) {
-      if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
-        qLog(Info) << "MainWindow: MATCH - calling GetPlaylistSongs for" << playlist.id << playlist.name;
-        subsonicservice->GetPlaylistSongs(playlist.id, playlist.name);
-      }
-      break;
+    navidrome_sync_pending_.insert(playlist.id, playlist.name);
+    if (SubsonicServicePtr subsonicservice = app_->streaming_services()->Service<SubsonicService>()) {
+      qLog(Info) << "MainWindow: sync - calling GetPlaylistSongs for" << playlist.id << playlist.name;
+      subsonicservice->GetPlaylistSongs(playlist.id, playlist.name);
     }
   }
 
@@ -3780,17 +3832,75 @@ void MainWindow::SubsonicPlaylistSongsReceived(const SongList &songs, const QStr
 
   qLog(Info) << "MainWindow: playlist songs received" << songs.size() << playlist_name << error;
 
+  if (!navidrome_sync_mode_) {
+
+    if (!error.isEmpty()) {
+      QMessageBox::warning(this, tr("Error"), tr("Failed to get playlist from Subsonic server: %1").arg(error));
+      return;
+    }
+
+    if (songs.isEmpty()) {
+      QMessageBox::information(this, tr("Import from Subsonic server"), tr("The playlist %1 is empty.").arg(playlist_name));
+      return;
+    }
+
+    app_->playlist_manager()->New(playlist_name, songs);
+
+    return;
+
+  }
+
+  // Batch sync mode: find the remote playlist ID matching this name.
+  QString remote_id;
+  QHashIterator<QString, QString> it(navidrome_sync_pending_);
+  while (it.hasNext()) {
+    it.next();
+    if (it.value() == playlist_name) {
+      remote_id = it.key();
+      break;
+    }
+  }
+
   if (!error.isEmpty()) {
-    QMessageBox::warning(this, tr("Error"), tr("Failed to get playlist from Subsonic server: %1").arg(error));
-    return;
+    navidrome_sync_errors_ << tr("Playlist \"%1\": %2").arg(playlist_name, error);
+  }
+  else if (!remote_id.isEmpty()) {
+    const QHash<int, QString> linked = app_->playlist_backend()->GetNavidromeLinkedPlaylists();
+
+    // Resolve the local playlist: exact-name match that isn't already linked to a *different* remote playlist.
+    int local_id = -1;
+    const QList<int> ids = app_->playlist_manager()->playlist_ids();
+    for (int id : ids) {
+      if (app_->playlist_manager()->playlist_name(id) != playlist_name) continue;
+      const QString linked_remote = linked.value(id);
+      if (!linked_remote.isEmpty() && linked_remote != remote_id) continue;
+      local_id = id;
+      break;
+    }
+
+    if (local_id == -1) {
+      // New playlist.
+      app_->playlist_manager()->New(playlist_name, songs, QStringLiteral("navidrome"));
+    } else {
+      // Existing playlist: update in place.
+      app_->playlist_manager()->SyncPlaylistFromNavidrome(local_id, remote_id, playlist_name, songs);
+    }
   }
 
-  if (songs.isEmpty()) {
-    QMessageBox::information(this, tr("Import from Subsonic server"), tr("The playlist %1 is empty.").arg(playlist_name));
-    return;
-  }
+  if (!remote_id.isEmpty()) navidrome_sync_pending_.remove(remote_id);
 
-  app_->playlist_manager()->New(playlist_name, songs);
+  ++navidrome_sync_completed_;
+  if (navidrome_sync_completed_ >= navidrome_sync_total_ || navidrome_sync_pending_.isEmpty()) {
+    navidrome_sync_mode_ = false;
+    navidrome_sync_pending_.clear();
+    if (navidrome_sync_errors_.isEmpty()) {
+      QMessageBox::information(this, tr("Sync Navidrome playlists"), tr("Successfully synced %1 playlist(s) from Navidrome.").arg(navidrome_sync_completed_));
+    }
+    else {
+      QMessageBox::warning(this, tr("Sync Navidrome playlists"), tr("Synced %1 of %2 playlist(s) with errors:\n\n%3").arg(navidrome_sync_completed_).arg(navidrome_sync_total_).arg(navidrome_sync_errors_.join(u'\n')));
+    }
+    navidrome_sync_errors_.clear();
+  }
 
 }
 

@@ -138,6 +138,9 @@ class PlaylistManager : public PlaylistManagerInterface {
   // Rate current song using 0 - 5 scale.
   void RateCurrentSong2(const int rating) override;
 
+  // Sync songs into an existing playlist from Navidrome, clearing it first. Creates the link if absent.
+  void SyncPlaylistFromNavidrome(const int local_playlist_id, const QString &remote_playlist_id, const QString &remote_playlist_name, const SongList &songs);
+
   void SaveAllPlaylists();
 
   void SetActivePlaying() override;
