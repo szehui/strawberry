@@ -532,6 +532,93 @@ void PlaylistBackend::RemovePlaylist(int id) {
 
 }
 
+void PlaylistBackend::LinkNavidromePlaylist(const int local_playlist_id, const QString &remote_playlist_id, const QString &remote_playlist_name) {
+
+  QMutexLocker l(database_->Mutex());
+  QSqlDatabase db(database_->Connect());
+  SqlQuery q(db);
+  q.prepare(u"INSERT OR REPLACE INTO navidrome_playlist_links (local_playlist_id, remote_playlist_id, remote_playlist_name, last_synced) VALUES (:local_playlist_id, :remote_playlist_id, :remote_playlist_name, strftime('%s','now'))"_s);
+  q.BindValue(u":local_playlist_id"_s, local_playlist_id);
+  q.BindValue(u":remote_playlist_id"_s, remote_playlist_id);
+  q.BindValue(u":remote_playlist_name"_s, remote_playlist_name);
+
+  if (!q.Exec()) {
+    database_->ReportErrors(q);
+  }
+
+}
+
+void PlaylistBackend::UnlinkNavidromePlaylist(const int local_playlist_id) {
+
+  QMutexLocker l(database_->Mutex());
+  QSqlDatabase db(database_->Connect());
+  SqlQuery q(db);
+  q.prepare(u"DELETE FROM navidrome_playlist_links WHERE local_playlist_id=:local_playlist_id"_s);
+  q.BindValue(u":local_playlist_id"_s, local_playlist_id);
+
+  if (!q.Exec()) {
+    database_->ReportErrors(q);
+  }
+
+}
+
+QString PlaylistBackend::GetNavidromePlaylistId(const int local_playlist_id) {
+
+  QMutexLocker l(database_->Mutex());
+  QSqlDatabase db(database_->Connect());
+  SqlQuery q(db);
+  q.prepare(u"SELECT remote_playlist_id FROM navidrome_playlist_links WHERE local_playlist_id=:local_playlist_id"_s);
+  q.BindValue(u":local_playlist_id"_s, local_playlist_id);
+
+  if (!q.Exec()) {
+    database_->ReportErrors(q);
+    return QString();
+  }
+
+  if (!q.next()) {
+    return QString();
+  }
+
+  return q.value(0).toString();
+
+}
+
+QHash<int, QString> PlaylistBackend::GetNavidromeLinkedPlaylists() {
+
+  QMutexLocker l(database_->Mutex());
+  QSqlDatabase db(database_->Connect());
+  SqlQuery q(db);
+  q.prepare(u"SELECT local_playlist_id, remote_playlist_id FROM navidrome_playlist_links"_s);
+
+  QHash<int, QString> ret;
+
+  if (!q.Exec()) {
+    database_->ReportErrors(q);
+    return ret;
+  }
+
+  while (q.next()) {
+    ret.insert(q.value(0).toInt(), q.value(1).toString());
+  }
+
+  return ret;
+
+}
+
+void PlaylistBackend::UpdateNavidromeLastSynced(const int local_playlist_id) {
+
+  QMutexLocker l(database_->Mutex());
+  QSqlDatabase db(database_->Connect());
+  SqlQuery q(db);
+  q.prepare(u"UPDATE navidrome_playlist_links SET last_synced=strftime('%s','now') WHERE local_playlist_id=:local_playlist_id"_s);
+  q.BindValue(u":local_playlist_id"_s, local_playlist_id);
+
+  if (!q.Exec()) {
+    database_->ReportErrors(q);
+  }
+
+}
+
 void PlaylistBackend::RenamePlaylist(const int id, const QString &new_name) {
 
   QMutexLocker l(database_->Mutex());
