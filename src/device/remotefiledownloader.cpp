@@ -32,6 +32,7 @@
 #include "core/logging.h"
 #include "core/standardpaths.h"
 #include "core/settings.h"
+#include "credentialsmanager/credentialsmanager.h"
 #include "subsonic/subsonicbaserequest.h"
 #include "constants/subsonicsettings.h"
 #include "remotefiledownloader.h"
@@ -69,7 +70,6 @@ QUrl RemoteFileDownloader::ResolveUrl(const QUrl &url, QString *error) {
   s.beginGroup(QLatin1String(SubsonicSettings::kSettingsGroup));
   const QUrl server_url = s.value(QLatin1String(SubsonicSettings::kUrl)).toUrl();
   const QString username = s.value(QLatin1String(SubsonicSettings::kUsername)).toString();
-  const QByteArray password_b64 = s.value(QLatin1String(SubsonicSettings::kPassword)).toByteArray();
   const int auth_method_int = s.value(QLatin1String(SubsonicSettings::kAuthMethod), 0).toInt();
   s.endGroup();
 
@@ -77,12 +77,29 @@ QUrl RemoteFileDownloader::ResolveUrl(const QUrl &url, QString *error) {
     if (error) *error = u"Subsonic server URL is invalid"_s;
     return QUrl();
   }
-  if (username.isEmpty() || password_b64.isEmpty()) {
-    if (error) *error = u"Missing Subsonic username or password"_s;
+  if (username.isEmpty()) {
+    if (error) *error = u"Missing Subsonic username"_s;
     return QUrl();
   }
 
-  const QString password = QString::fromUtf8(QByteArray::fromBase64(password_b64));
+  // Read the password from KWallet via CredentialsManager.
+  // The password is not stored in the settings file for security reasons.
+  CredentialsManager credentials_manager;
+  QEventLoop loop;
+  CredentialsReplyPtr reply = credentials_manager.ReadPasswordAsync(QLatin1String(SubsonicSettings::kCredentialsService));
+  QObject::connect(reply.get(), &CredentialsReply::Finished, &loop, &QEventLoop::quit);
+  loop.exec();
+
+  QString password;
+  if (reply->success()) {
+    password = reply->password();
+  }
+
+  if (password.isEmpty()) {
+    if (error) *error = u"Missing Subsonic password"_s;
+    return QUrl();
+  }
+
   const SubsonicSettings::AuthMethod auth_method = static_cast<SubsonicSettings::AuthMethod>(auth_method_int);
 
   using Param = QPair<QString, QString>;
